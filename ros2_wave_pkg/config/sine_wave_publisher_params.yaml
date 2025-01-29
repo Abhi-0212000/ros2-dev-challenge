@@ -1,0 +1,16 @@
+/sine_wave_publisher:
+  ros__parameters:
+    # How many points to publish per second
+    publisher_frequency: 50.0  # Hz
+
+    # Amplitude of the sine wave (can be negative)
+    amplitude: 3.0
+
+    # How fast the sine wave oscillates (rad/s)
+    # 2π means one complete cycle per second
+    angular_frequency: 6.28  # 2π rad/s = 1 Hz
+
+    # Phase shift of the wave (radians)
+    # 0 means sine wave starts at 0
+    # π/2 would mean it starts at amplitude
+    phase: 0.0  # radians
