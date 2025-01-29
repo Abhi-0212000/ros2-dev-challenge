@@ -14,6 +14,8 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 import matplotlib.pyplot as plt
 import time
+from ament_index_python.packages import get_package_share_directory
+import os
 
 class SineWavePublisher(Node):
     """
@@ -195,10 +197,27 @@ class SineWavePublisher(Node):
             
         except Exception as e:
             self.get_logger().error(f'Error in timer callback: {str(e)}')
+            
+    @staticmethod
+    def get_test_image_path():
+        """Get the absolute path to the test image."""
+        package_share_dir = get_package_share_directory('ros2_wave_pkg')
+        test_image_path = os.path.join(package_share_dir, 'test_images', 'test_image.jpg')
+        return test_image_path
 
     def process_image_callback(self, request, response):
         """Callback for the image processing service."""
         try:
+            """
+            To test the service, set image_path to "test" in service call or use  package-relative path in service calls.
+            Example Serive calls:
+                1. ros2 service call /process_image custom_interfaces/srv/ProcessImage "{image_path: '$(ros2 pkg prefix ros2_wave_pkg)/share/ros2_wave_pkg/test_images/test_image.jpg', show_visualization: true}"
+                2. ros2 service call /process_image custom_interfaces/srv/ProcessImage "{image_path: 'test', show_visualization: true}"
+            """
+            if request.image_path == "test":
+                request.image_path = self.get_test_image_path()
+                self.get_logger().info(f"Using test image at: {request.image_path}")
+                
             # Validate input path
             if not request.image_path:
                 raise ValueError("Image path cannot be empty")

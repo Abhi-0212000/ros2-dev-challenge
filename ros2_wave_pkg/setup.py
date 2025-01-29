@@ -16,6 +16,8 @@ setup(
          glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'config'),
          glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'test_images'),
+         glob('test/test_images/*.jpg')),
     ],
     install_requires=['setuptools',
                      'numpy',
