@@ -1,4 +1,4 @@
-/sine_wave_publisher:
+sine_wave_publisher:
   ros__parameters:
     # How many points to publish per second
     publisher_frequency: 50.0  # Hz

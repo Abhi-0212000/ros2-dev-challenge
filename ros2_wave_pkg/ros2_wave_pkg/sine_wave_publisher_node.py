@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import time
 from ament_index_python.packages import get_package_share_directory
 import os
+from ros2_wave_pkg.sine_wave_pub_params import sine_wave_publisher
 
 class SineWavePublisher(Node):
     """
@@ -33,29 +34,45 @@ class SineWavePublisher(Node):
     def __init__(self):
         super().__init__('sine_wave_publisher')
         
+        self.param_listener = sine_wave_publisher.ParamListener(self)
+        self.params = self.param_listener.get_params()
+        
+        self.pub_freq = self.params.publisher_frequency
+        self.amplitude = self.params.amplitude
+        self.angular_freq = self.params.angular_frequency
+        self.phase = self.params.phase
+        
+        self.get_logger().info(
+            f'Params loaded from generate parameter library: \n'
+            f'publish_frequency is: {self.params.publisher_frequency}, '
+            f'amplitude is: {self.params.amplitude}, '
+            f'angular frequency is: {self.params.angular_frequency}, '
+            f'Phase is: {self.params.phase}'
+        )
+
         # Create reentrant callback group for service
         service_callback_group = ReentrantCallbackGroup()
         
         # Declare and get parameters with validation ranges
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('publisher_frequency', 100.0, 
-                 self._get_float_descriptor_with_min('Publishing frequency in Hz', min_value=0.0, strictly_positive=True)),
-                ('amplitude', 1.0,
-                 self._get_float_descriptor('Amplitude of the sine wave')),
-                ('angular_frequency', 2*math.pi,  # Default 1 Hz in rad/s
-                 self._get_float_descriptor_with_min('Angular frequency in rad/s', min_value=0.0)),
-                ('phase', 0.0,
-                 self._get_float_descriptor('Phase shift in radians'))
-            ]
-        )
+        # self.declare_parameters(
+        #     namespace='',
+        #     parameters=[
+        #         ('publisher_frequency', 100.0, 
+        #          self._get_float_descriptor_with_min('Publishing frequency in Hz', min_value=0.0, strictly_positive=True)),
+        #         ('amplitude', 1.0,
+        #          self._get_float_descriptor('Amplitude of the sine wave')),
+        #         ('angular_frequency', 2*math.pi,  # Default 1 Hz in rad/s
+        #          self._get_float_descriptor_with_min('Angular frequency in rad/s', min_value=0.0)),
+        #         ('phase', 0.0,
+        #          self._get_float_descriptor('Phase shift in radians'))
+        #     ]
+        # )
 
-        # Get parameters
-        self.pub_freq = self.get_parameter('publisher_frequency').value
-        self.amplitude = self.get_parameter('amplitude').value
-        self.angular_freq = self.get_parameter('angular_frequency').value
-        self.phase = self.get_parameter('phase').value
+        # # Get parameters
+        # self.pub_freq = self.get_parameter('publisher_frequency').value
+        # self.amplitude = self.get_parameter('amplitude').value
+        # self.angular_freq = self.get_parameter('angular_frequency').value
+        # self.phase = self.get_parameter('phase').value
 
         # Validate Nyquist criterion
         self._validate_nyquist_criterion()

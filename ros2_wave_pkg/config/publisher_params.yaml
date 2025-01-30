@@ -1,0 +1,32 @@
+# sine_wave_publisher_params.yaml
+sine_wave_publisher:
+  publisher_frequency:
+    type: double
+    default_value: 25.0
+    description: "Publishing frequency in Hz"
+    validation:
+      gt<>: [0.0]  # Must be positive
+      lt<>: [150.0]  # Reasonable upper limit
+
+  amplitude:
+    type: double
+    default_value: 3.0
+    description: "Amplitude of the sine wave (peak value)"
+    validation:
+      gt<>: [0.0]  # Must be positive
+      lt<>: [50.0]  # Reasonable upper limit
+
+  angular_frequency:
+    type: double
+    default_value: 6.28  # 2π rad/s = 1 Hz
+    description: "Angular frequency in radians per second. 2π means one complete cycle per second"
+    validation:
+      gt<>: [0.0]  # Must be positive
+      lt<>: [62.8]  # Limit to 10 Hz (ω = 2πf)
+
+  phase:
+    type: double
+    default_value: 0.0
+    description: "Phase shift in radians. 0 means sine wave starts at 0, π/2 would mean it starts at amplitude"
+    validation:
+      bounds<>: [-6.28, 6.28]  # Between -2π and 2π

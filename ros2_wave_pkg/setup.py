@@ -4,6 +4,12 @@ from glob import glob
 
 package_name = 'ros2_wave_pkg'
 
+from generate_parameter_library_py.setup_helper import generate_parameter_module
+generate_parameter_module(
+    "sine_wave_pub_params",  # The name of the generated Python module
+    "config/publisher_params.yaml"  # The path to your YAML file
+)
+
 setup(
     name=package_name,
     version='0.0.1',
