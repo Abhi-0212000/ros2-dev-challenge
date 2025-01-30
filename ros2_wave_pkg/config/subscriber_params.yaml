@@ -1,0 +1,14 @@
+sine_wave_subscriber:
+  buffer_size:
+    type: int
+    default_value: 1000
+    read_only: true
+    description: "Size of data buffer for plotting"
+    validation:
+      bounds<>: [250, 1500]  # Reasonable upper limit for memory and lower limit for plotting.
+    
+  enable_plot:
+    type: bool
+    default_value: true
+    read_only: true
+    description: "Enable real-time plotting"

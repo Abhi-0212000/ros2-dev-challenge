@@ -3,7 +3,6 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange
 from custom_interfaces.srv import ProcessImage
 from custom_interfaces.msg import SineWave
 from std_msgs.msg import Header
@@ -36,46 +35,9 @@ class SineWavePublisher(Node):
         
         self.param_listener = sine_wave_publisher.ParamListener(self)
         self.params = self.param_listener.get_params()
-        
-        self.pub_freq = self.params.publisher_frequency
-        self.amplitude = self.params.amplitude
-        self.angular_freq = self.params.angular_frequency
-        self.phase = self.params.phase
-        
-        self.get_logger().info(
-            f'Params loaded from generate parameter library: \n'
-            f'publish_frequency is: {self.params.publisher_frequency}, '
-            f'amplitude is: {self.params.amplitude}, '
-            f'angular frequency is: {self.params.angular_frequency}, '
-            f'Phase is: {self.params.phase}'
-        )
 
         # Create reentrant callback group for service
         service_callback_group = ReentrantCallbackGroup()
-        
-        # Declare and get parameters with validation ranges
-        # self.declare_parameters(
-        #     namespace='',
-        #     parameters=[
-        #         ('publisher_frequency', 100.0, 
-        #          self._get_float_descriptor_with_min('Publishing frequency in Hz', min_value=0.0, strictly_positive=True)),
-        #         ('amplitude', 1.0,
-        #          self._get_float_descriptor('Amplitude of the sine wave')),
-        #         ('angular_frequency', 2*math.pi,  # Default 1 Hz in rad/s
-        #          self._get_float_descriptor_with_min('Angular frequency in rad/s', min_value=0.0)),
-        #         ('phase', 0.0,
-        #          self._get_float_descriptor('Phase shift in radians'))
-        #     ]
-        # )
-
-        # # Get parameters
-        # self.pub_freq = self.get_parameter('publisher_frequency').value
-        # self.amplitude = self.get_parameter('amplitude').value
-        # self.angular_freq = self.get_parameter('angular_frequency').value
-        # self.phase = self.get_parameter('phase').value
-
-        # Validate Nyquist criterion
-        self._validate_nyquist_criterion()
         
         # Create image processing service with reentrant callback group
         self.srv = self.create_service(
@@ -107,80 +69,39 @@ class SineWavePublisher(Node):
         self.start_time = None
         
         # Create timer for publishing
-        period = 1.0 / self.pub_freq
-        self.timer = self.create_timer(period, self.timer_callback)
+        period = 1.0 /  self.params.publisher_frequency
+        self.publisher_timer = self.create_timer(period, self.publisher_timer_callback)
+        
+        self.param_listener_timer = self.create_timer(1, self.param_listener_callback)
         
         # Log parameters and initialization
         self._log_parameters()
         self.get_logger().info('Publisher and image processing service initialized')
-
-    def _get_float_descriptor_with_min(self, description: str, min_value: float = 0.0, 
-                                     strictly_positive: bool = False) -> ParameterDescriptor:
-        """
-        Creates a descriptor for a float parameter with a minimum value constraint.
-        
-        Args:
-            description: Parameter description
-            min_value: Minimum allowed value (inclusive)
-            strictly_positive: If True, adds a note that value must be > 0
-        """
-        range = FloatingPointRange()
-        range.from_value = min_value
-        range.to_value = float('inf')
-        range.step = 0.0
-        
-        if strictly_positive:
-            description += " (must be > 0)"
-        elif min_value > 0:
-            description += f" (must be >= {min_value})"
-            
-        return ParameterDescriptor(
-            description=description,
-            floating_point_range=[range]
-        )
-
-    def _get_float_descriptor(self, description: str) -> ParameterDescriptor:
-        """Creates a descriptor for a float parameter with no range constraints."""
-        return ParameterDescriptor(description=description)
-
-    def _validate_nyquist_criterion(self):
-        """
-        Validates that the publishing frequency satisfies the Nyquist criterion.
-        
-        For a sine wave with angular frequency ω:
-        - Frequency in Hz = ω/(2π)
-        - Required sampling rate = 2 * frequency
-        Therefore:
-        - Required publishing frequency > ω/π
-        """
-        min_freq = self.angular_freq / math.pi
-        if self.pub_freq <= min_freq:
-            raise ValueError(
-                f"Publishing frequency ({self.pub_freq} Hz) is too low for "
-                f"angular frequency ({self.angular_freq} rad/s). "
-                f"Minimum required frequency is {min_freq:.2f} Hz "
-                f"to satisfy Nyquist criterion."
-            )
+    
+    def param_listener_callback(self):
+        if self.param_listener.is_old(self.params):
+            self.param_listener.refresh_dynamic_parameters()
+            self.params = self.param_listener.get_params()
 
     def _log_parameters(self):
         """Logs the current parameter values and derived characteristics."""
-        cycle_time = 2 * math.pi / self.angular_freq  # Time for one complete cycle. T = 2π/ω
-        points_per_cycle = self.pub_freq * cycle_time  # Number of points per cycle. N = f*T
-        freq_hz = self.angular_freq / (2 * math.pi)  # Frequency in Hz. f = ω/(2π)
+        cycle_time = 2 * math.pi / self.params.angular_frequency  # Time for one complete cycle. T = 2π/ω
+        points_per_cycle =  self.params.publisher_frequency * cycle_time  # Number of points per cycle. N = f*T
+        freq_hz = self.params.angular_frequency / (2 * math.pi)  # Frequency in Hz. f = ω/(2π)
 
         self.get_logger().info(
             f"\nSine Wave Parameters:"
-            f"\n- Publishing Frequency: {self.pub_freq} Hz"
-            f"\n- Amplitude: {self.amplitude}"
-            f"\n- Angular Frequency: {self.angular_freq} rad/s"
+            f"\n- Publishing Frequency: {self.params.publisher_frequency} Hz"
+            f"\n- Amplitude: {self.params.amplitude}"
+            f"\n- Angular Frequency: {self.params.angular_frequency} rad/s"
             f"\n- Frequency: {freq_hz:.2f} Hz"
-            f"\n- Phase: {self.phase} rad"
+            f"\n- Phase: {self.params.phase} rad"
             f"\n\nDerived Characteristics:"
             f"\n- Time per cycle: {cycle_time:.4f} s"
             f"\n- Points per cycle: {points_per_cycle:.2f}"
         )
 
-    def timer_callback(self):
+    def publisher_timer_callback(self):
         """
         Timer callback function that computes and publishes the sine wave value.
         
@@ -202,13 +123,13 @@ class SineWavePublisher(Node):
                 elapsed_time = (current_time - self.start_time).nanoseconds / 1e9
             
             # Calculate sine wave value
-            value = self.amplitude * math.sin(self.angular_freq * elapsed_time + self.phase)
+            value = self.params.amplitude * math.sin(self.params.angular_frequency * elapsed_time + self.params.phase)
             
             # Fill message with current value and parameters
             msg.value = value
             msg.elapsed_time = elapsed_time
-            msg.amplitude = self.amplitude
-            # msg.frequency = self.angular_freq / (2 * math.pi)  # Convert to Hz
+            msg.amplitude = self.params.amplitude
+            # msg.frequency = self.params.angular_frequency / (2 * math.pi)  # Convert to Hz
             
             self.publisher.publish(msg)
             
@@ -303,9 +224,6 @@ class SineWavePublisher(Node):
             response.message = f"Error processing image: {str(e)}"
             response.processed_image_path = ""
             self.get_logger().error(f'Image processing error: {str(e)}')
-            
-            # Cleanup any windows in case of error
-            cv2.destroyAllWindows()
         
         return response
 
@@ -316,7 +234,8 @@ class SineWavePublisher(Node):
             
             # Cancel timer
             if hasattr(self, 'timer'):
-                self.timer.cancel()
+                self.publisher_timer.cancel()
+                self.param_listener_timer.cancel()
             
             # Cleanup publisher and service
             if hasattr(self, 'publisher'):
@@ -336,7 +255,7 @@ def main(args=None):
     
     try:
         node = SineWavePublisher()
-        executor = MultiThreadedExecutor(num_threads=2)
+        executor = MultiThreadedExecutor(num_threads=3)
         executor.add_node(node)
         
         try:

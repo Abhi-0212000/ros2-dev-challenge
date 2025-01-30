@@ -1,7 +1,7 @@
-/sine_wave_subscriber:
+sine_wave_subscriber:
   ros__parameters:
     # Size of data buffer for plotting
-    buffer_size: 1000
+    buffer_size: 1000 # int and in range of [250, 1500]
     
     # Enable/disable real-time plotting
-    enable_plot: true  # Default: no visualization
+    enable_plot: true  # bool

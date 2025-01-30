@@ -3,13 +3,12 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-from rclpy.parameter import Parameter
-from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange, IntegerRange
 from custom_interfaces.msg import SineWave
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from threading import Lock, Thread
+from ros2_wave_pkg.sine_wave_sub_params import sine_wave_subscriber
 
 class WaveSubscriber(Node):
     """
@@ -19,25 +18,13 @@ class WaveSubscriber(Node):
     def __init__(self):
         super().__init__('sine_wave_subscriber')
         
+        self.param_listener = sine_wave_subscriber.ParamListener(self)
+        self.params = self.param_listener.get_params()
+        
         # Add shutdown event flag
         self._cleanup_done = False
         self._shutdown_event = False
         self.plot_thread = None
-        
-        # Declare parameters with validation
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('buffer_size', 1000, 
-                 self._get_positive_int_descriptor('Size of data buffer for plotting')),
-                ('enable_plot', False,
-                 ParameterDescriptor(description='Enable real-time plotting')),
-            ]
-        )
-
-        # Get parameters
-        self.buffer_size = self.get_parameter('buffer_size').value
-        self.enable_plot = self.get_parameter('enable_plot').value
 
         # Initialize data storage with thread safety
         self.data_lock = Lock()
@@ -52,7 +39,7 @@ class WaveSubscriber(Node):
         self.max_amplitude = None  # Track the wave amplitude
 
         # Start visualization if enabled
-        if self.enable_plot:
+        if self.params.enable_plot:
             self.plot_thread = Thread(target=self.setup_plot)
             self.plot_thread.daemon = True  # Make thread daemon so it doesn't block shutdown
             self.plot_thread.start()
@@ -73,17 +60,6 @@ class WaveSubscriber(Node):
             qos_profile
         )
 
-    def _get_positive_int_descriptor(self, description: str) -> ParameterDescriptor:
-        """Creates a descriptor for a positive integer parameter."""
-        range = IntegerRange()
-        range.from_value = 1
-        range.to_value = 10000  # Reasonable upper limit for buffer
-        range.step = 1
-        return ParameterDescriptor(
-            description=description,
-            integer_range=[range],
-            read_only=True  # Buffer size shouldn't change during runtime
-        )
 
     def listener_callback(self, msg):
         """Callback for receiving sine wave data."""
@@ -99,15 +75,15 @@ class WaveSubscriber(Node):
             self.get_logger().info(f'Updated wave amplitude for Plots Y-axis to: {self.max_amplitude}')
 
         # Store data if plotting is enabled
-        if self.enable_plot:
+        if self.params.enable_plot:
             with self.data_lock:
                 self.times = np.append(self.times, msg.elapsed_time)
                 self.values = np.append(self.values, msg.value)
                 
                 # Keep buffer size in check by removing oldest data
-                if len(self.times) > self.buffer_size:
-                    self.times = self.times[-self.buffer_size:]
-                    self.values = self.values[-self.buffer_size:]
+                if len(self.times) > self.params.buffer_size:
+                    self.times = self.times[-self.params.buffer_size:]
+                    self.values = self.values[-self.params.buffer_size:]
 
     def setup_plot(self):
         """Sets up the matplotlib plot with animation."""
@@ -196,7 +172,7 @@ class WaveSubscriber(Node):
             self._shutdown_event = True
             self.plot_active = False
             
-            if self.enable_plot:
+            if self.params.enable_plot:
                 # Stop animation if it exists
                 if hasattr(self, 'anim') and self.anim is not None:
                     self.get_logger().info('Stopping animation...')

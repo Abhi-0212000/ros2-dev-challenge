@@ -2,27 +2,25 @@
 sine_wave_publisher:
   publisher_frequency:
     type: double
-    default_value: 25.0
+    default_value: 50.0
+    read_only: true
     description: "Publishing frequency in Hz"
     validation:
-      gt<>: [0.0]  # Must be positive
-      lt<>: [150.0]  # Reasonable upper limit
+      bounds<>: [0.0, 100.0] # Must be positive and reasonable upper limit
 
   amplitude:
     type: double
     default_value: 3.0
     description: "Amplitude of the sine wave (peak value)"
     validation:
-      gt<>: [0.0]  # Must be positive
-      lt<>: [50.0]  # Reasonable upper limit
+      bounds<>: [0.0, 50.0] # Must be positive and reasonable upper limit
 
   angular_frequency:
     type: double
     default_value: 6.28  # 2π rad/s = 1 Hz
     description: "Angular frequency in radians per second. 2π means one complete cycle per second"
     validation:
-      gt<>: [0.0]  # Must be positive
-      lt<>: [62.8]  # Limit to 10 Hz (ω = 2πf)
+      bounds<>: [0.0, 62.8] # Must be positive and Limited to 10 Hz (ω = 2πf)
 
   phase:
     type: double

@@ -10,6 +10,11 @@ generate_parameter_module(
     "config/publisher_params.yaml"  # The path to your YAML file
 )
 
+generate_parameter_module(
+    "sine_wave_sub_params",  # The name of the generated Python module
+    "config/subscriber_params.yaml"  # The path to your YAML file
+)
+
 setup(
     name=package_name,
     version='0.0.1',
