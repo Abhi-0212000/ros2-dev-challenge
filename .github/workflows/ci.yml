@@ -11,27 +11,49 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ros:humble
-    
+
     steps:
-    - uses: actions/checkout@v2
-    
+    - name: Create ROS workspace
+      run: |
+        mkdir -p /ros2_wave_ws/src
+
+    # Checkout generate_parameter_library
+    - name: Clone generate_parameter_library
+      run: |
+        cd /ros2_wave_ws/src
+        git clone https://github.com/picknikrobotics/generate_parameter_library.git
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        path: /ros2_wave_ws/src/ros2-dev-challenge
+
     - name: Install dependencies
+      working-directory: /ros2_wave_ws
       run: |
         apt-get update
         apt-get install -y python3-pip
-        pip3 install pytest pytest-cov flake8 black isort
+        pip3 install pytest pytest-cov flake8 black isort pre-commit
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
-    
-    - name: Build
+
+    - name: Run pre-commit checks
+      working-directory: /ros2_wave_ws/src/ros2-dev-challenge
       run: |
-        . /opt/ros/humble/setup.sh
+        pre-commit install
+        pre-commit run --all-files
+
+    - name: Build
+      working-directory: /ros2_wave_ws
+      run: |
+        . /opt/ros/humble/setup.bash
         colcon build
         
     - name: Run tests
+      working-directory: /ros2_wave_ws
       run: |
-        . /opt/ros/humble/setup.sh
-        . install/setup.sh
+        . /opt/ros/humble/setup.bash
+        . install/setup.bash
         colcon test
         colcon test-result --verbose
 
