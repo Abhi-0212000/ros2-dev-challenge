@@ -1,0 +1,91 @@
+name: ROS2 CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Workspace
+      shell: bash
+      run: |
+        source /opt/ros/humble/setup.bash
+        mkdir -p ~/ros_ws/src
+        cd ~/ros_ws
+        colcon build
+        source install/setup.bash
+
+    - name: copy curreny repo to workspace
+      shell: bash
+      run: |
+        cp -r $GITHUB_WORKSPACE ~/ros_ws/src
+
+    # Checkout generate_parameter_library
+    - name: Clone generate_parameter_library
+      shell: bash
+      run: |
+        cd ~/ros_ws/src
+        git clone https://github.com/picknikrobotics/generate_parameter_library.git
+
+    - name: List workspace contents
+      run: |
+        ls -R ~/ros_ws/src
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        cd ~/ros_ws
+        apt-get update
+        apt-get install -y flake8 python3-pip isort
+        rosdep update
+        rosdep install --from-paths src --ignore-src -r -y
+
+    # - name: Run pre-commit checks
+    #   shell: bash
+    #   run: |
+    #     cd ~/ros_ws/src
+    #     ls
+    #     cd ~/ros_ws/src/ros2-dev-challenge
+    #     ls
+    #     pre-commit install
+    #     pre-commit run --all-files
+
+    - name: Build
+      shell: bash
+      run: |
+        cd ~/ros_ws
+        . /opt/ros/humble/setup.bash
+        colcon build
+        
+    - name: Run tests
+      shell: bash
+      run: |
+        cd ~/ros_ws
+        . /opt/ros/humble/setup.bash
+        . install/setup.bash
+        colcon test --packages-select ros2_wave_pkg --event-handlers console_direct+
+        colcon test-result --verbose
+
+    - name: Run linting
+      shell: bash
+      run: |
+        cd ~/ros_ws/src/ros2-dev-challenge
+        chmod +x run_linting.sh
+        ./run_linting.sh
+
+    - name: Upload lint logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: lint-logs
+        path: ~/ros_ws/src/ros2-dev-challenge/lint_logs/

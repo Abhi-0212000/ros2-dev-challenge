@@ -1,0 +1,6 @@
+string image_path
+bool show_visualization  # Whether to display the image
+---
+bool success
+string message
+string processed_image_path
