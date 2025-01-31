@@ -1,0 +1,42 @@
+name: ROS2 CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y python3-pip
+        pip3 install pytest pytest-cov flake8 black isort
+        rosdep update
+        rosdep install --from-paths src --ignore-src -r -y
+    
+    - name: Build
+      run: |
+        . /opt/ros/humble/setup.sh
+        colcon build
+        
+    - name: Run tests
+      run: |
+        . /opt/ros/humble/setup.sh
+        . install/setup.sh
+        colcon test
+        colcon test-result --verbose
+
+    - name: Run linting
+      run: |
+        flake8 src/ros2_wave_pkg
+        black --check src/ros2_wave_pkg
+        isort --check-only src/ros2_wave_pkg

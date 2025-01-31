@@ -1,0 +1,25 @@
+[MASTER]
+ignore=CVS
+persistent=yes
+load-plugins=
+
+[MESSAGES CONTROL]
+disable=C0111,R0903,C0103
+
+[REPORTS]
+output-format=text
+files-output=no
+reports=no
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[BASIC]
+good-names=i,j,k,ex,Run,_
+bad-names=foo,bar,baz,toto,tutu,tata
+
+[FORMAT]
+max-line-length=100
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+single-line-if-stmt=no
+no-space-check=trailing-comma,dict-separator
+max-module-lines=2000
+indent-string='    '
