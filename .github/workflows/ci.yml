@@ -13,48 +13,27 @@ jobs:
       image: ros:humble
 
     steps:
-    - name: create ros2 workspace and src
+    - name: Setup Workspace
       run: |
-        mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
-        cd ${{ github.workspace }}/ros2_wave_ws/src
+        mkdir -p ros_ws/src/
+        cd ros_ws
+        colcon build
+        source install/setup.bash
 
     - name: Checkout repository
-      uses: actions/checkout@v2 
-
-    - name: Create ROS workspace and print directories
-      run: |
-        echo "Initial GitHub Workspace: ${{ github.workspace }}"
-        ls -la ${{ github.workspace }}
-        ls
-
-        # Create the workspace structure
-        mkdir -p ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge
-        
-        # Move repository contents to the correct location
-        mv ${{ github.workspace }}/* ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge/
-        mv ${{ github.workspace }}/.* ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge/ 2>/dev/null || true
-        
-        # Change to the workspace directory
-        cd ${{ github.workspace }}/../ros2_wave_ws
-        
-        echo "Contents of ros2_wave_ws:"
-        ls -la
-        echo "Contents of ros2_wave_ws/src:"
-        ls -la src
-        echo "Contents of ros2_wave_ws/src/ros2-dev-challenge:"
-        ls -la src/ros2-dev-challenge
-    
-    
+      uses: actions/checkout@v3
+      with:
+        path: ros_ws/src
 
     # Checkout generate_parameter_library
     - name: Clone generate_parameter_library
-      working-directory: ${{ github.workspace }}/ros2_wave_ws/src
       run: |
+        cd ros_ws/src
         git clone https://github.com/picknikrobotics/generate_parameter_library.git
 
     - name: Install dependencies
-      working-directory: ${{ github.workspace }}/ros2_wave_ws
       run: |
+        cd ros_ws
         apt-get update
         apt-get install -y python3-pip
         pip3 install pytest pytest-cov flake8 black isort pre-commit
@@ -62,20 +41,20 @@ jobs:
         rosdep install --from-paths src --ignore-src -r -y
 
     - name: Run pre-commit checks
-      working-directory: ${{ github.workspace }}/ros2_wave_ws/src/ros2-dev-challenge
       run: |
+        cd ros_ws
         pre-commit install
         pre-commit run --all-files
 
     - name: Build
-      working-directory: ${{ github.workspace }}/ros2_wave_ws
       run: |
+        cd ros_ws
         . /opt/ros/humble/setup.bash
         colcon build
         
     - name: Run tests
-      working-directory: /ros2_wave_ws
       run: |
+        cd ros_ws
         . /opt/ros/humble/setup.bash
         . install/setup.bash
         colcon test --packages-select ros2_wave_pkg
@@ -83,6 +62,7 @@ jobs:
 
     - name: Run linting
       run: |
+        cd ros_ws
         flake8 src/ros2_wave_pkg
         black --check src/ros2_wave_pkg
         isort --check-only src/ros2_wave_pkg
