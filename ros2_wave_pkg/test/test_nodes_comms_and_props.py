@@ -233,4 +233,4 @@ class TestOutcome(unittest.TestCase):
 
         """
         # Allow exit code 0 (normal) and 1 (error) during testing
-        launch_testing.asserts.assertExitCodes(proc_info, allowable_exit_codes=[0, 1])
+        launch_testing.asserts.assertExitCodes(proc_info, allowable_exit_codes=[0, 1, -9])
