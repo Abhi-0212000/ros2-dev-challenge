@@ -173,7 +173,7 @@ class TestNodeCommunication(unittest.TestCase):
         # Added debug print
         self.test_node.get_logger().info("\nStarting sine wave property test...")
 
-        while current_wait < max_wait_time and self.message_count < 20:
+        while current_wait < max_wait_time and self.message_count < 50:
             rclpy.spin_once(self.test_node, timeout_sec=spin_period)
             current_wait += spin_period
 
