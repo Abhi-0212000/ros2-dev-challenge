@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ros:humble
+    env:
+      PYTHONUNBUFFERED: 1
 
     steps:
     - name: Checkout repository
@@ -76,39 +78,41 @@ jobs:
         colcon test --packages-select ros2_wave_pkg --event-handlers console_direct+
         colcon test-result --verbose
 
-    - name: Run linting
+    - name: Run linting with debug
       shell: bash
       run: |
         dpkg -l | grep flake8
         dpkg -l | grep isort
         dpkg -l | grep black
+        set -x  # Enable command echo
         cd ~/ros_ws/src/ros2-dev-challenge
-        echo "Current directory contents:"
-        ls -la
         
-        echo "ros2_wave_pkg directory contents:"
-        ls -la ros2_wave_pkg
+        echo "PWD: $(pwd)"
+        echo "Directory contents:"
+        ls -la >&2
         
-        echo "Python and tool versions:"
-        python3 --version
-        flake8 --version
-        which flake8
+        echo "Package contents:"
+        ls -la ros2_wave_pkg >&2
         
-        echo "Running flake8 with detailed output..."
-        # First try with very basic checks
-        flake8 ros2_wave_pkg --select=E9,F63,F7,F82 --show-source --statistics || true
+        echo "Python version:"
+        python3 --version >&2
         
-        echo "Creating a detailed error log..."
-        flake8 ros2_wave_pkg --statistics --count --show-source --output-file=flake8.log || true
+        echo "Flake8 version and location:"
+        flake8 --version >&2
+        which flake8 >&2
         
-        echo "Contents of flake8.log:"
-        cat flake8.log || echo "No log file created"
+        echo "=== Running Flake8 ==="
+        # Redirect both stdout and stderr to files and terminal
+        flake8 ros2_wave_pkg --show-source --statistics 2>&1 | tee flake8_output.txt
         
-        echo "Running minimal flake8 check..."
-        flake8 ros2_wave_pkg --select=E999 --show-source || true
+        echo "=== Flake8 Output ==="
+        cat flake8_output.txt
         
-        echo "Running black..."
-        black --check --diff ros2_wave_pkg || true
-        
-        echo "Running isort..."
-        isort --check-only --diff ros2_wave_pkg || true
+        # Only continue with other checks if flake8 passes
+        if [ $? -eq 0 ]; then
+            echo "=== Running Black ==="
+            black --check --diff ros2_wave_pkg
+            
+            echo "=== Running isort ==="
+            isort --check-only --diff ros2_wave_pkg
+        fi
