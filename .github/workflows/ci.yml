@@ -19,25 +19,23 @@ jobs:
     - name: Create ROS workspace and print directories
       run: |
         echo "Initial GitHub Workspace: ${{ github.workspace }}"
+
+        # Create the workspace structure
+        mkdir -p ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge
         
-        if [ -d "${{ github.workspace }}" ]; then
-          echo "Contents before moving:"
-          ls
-        else
-          echo "Error: Directory not found at ${{ github.workspace }}"
-        fi
-    
-        # Ensure workspace directory creation
-        mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
-    
-        echo "Moving files to src if any..."
-        mv ${{ github.workspace }}/* ${{ github.workspace }}/ros2_wave_ws/src/ || true
-        mv ${{ github.workspace }}/.* ${{ github.workspace }}/ros2_wave_ws/src/ 2>/dev/null || true
-    
+        # Move repository contents to the correct location
+        mv ${{ github.workspace }}/* ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge/
+        mv ${{ github.workspace }}/.* ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge/ 2>/dev/null || true
+        
+        # Change to the workspace directory
+        cd ${{ github.workspace }}/../ros2_wave_ws
+        
         echo "Contents of ros2_wave_ws:"
-        ls -la ${{ github.workspace }}/ros2_wave_ws || true
+        ls -la
         echo "Contents of ros2_wave_ws/src:"
-        ls -la ${{ github.workspace }}/ros2_wave_ws/src || true
+        ls -la src
+        echo "Contents of ros2_wave_ws/src/ros2-dev-challenge:"
+        ls -la src/ros2-dev-challenge
     
     
 
