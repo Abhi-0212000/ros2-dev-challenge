@@ -47,7 +47,6 @@ jobs:
         cd ~/ros_ws
         apt-get update
         apt-get install -y python3-pip
-        pip3 install pytest pytest-cov flake8 black isort pre-commit
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
 
