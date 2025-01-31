@@ -9,7 +9,7 @@ for both publisher and subscriber nodes.
 
 import os
 from glob import glob
-from setuptools import find_packages, setup
+from setuptools import setup
 from generate_parameter_library_py.setup_helper import generate_parameter_module
 
 package_name = "ros2_wave_pkg"
@@ -27,7 +27,7 @@ generate_parameter_module(
 setup(
     name=package_name,
     version="0.0.1",
-    packages=find_packages(),
+    packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
@@ -50,7 +50,10 @@ setup(
     license="Apache License 2.0",
     tests_require=["pytest",
                    "pytest-launch-testing",
-                   "launch_testing"],
+                   "launch_testing",
+                   "pytest-mock",
+                   "pytest-cov",
+                   "ros2_wave_pkg"],
     entry_points={
         "console_scripts": [
             "sine_wave_publisher = ros2_wave_pkg.sine_wave_publisher_node:main",
