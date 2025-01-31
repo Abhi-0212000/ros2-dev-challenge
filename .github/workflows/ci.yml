@@ -77,11 +77,6 @@ jobs:
         colcon test --packages-select ros2_wave_pkg --event-handlers console_direct+
         colcon test-result --verbose
 
-    - name: Install linting dependencies
-      shell: bash
-      run: |
-        pip install flake8 black isort
-
     - name: Run linting
       shell: bash
       run: |
