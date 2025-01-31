@@ -19,11 +19,13 @@ jobs:
         cd ${{ github.workspace }}/ros2_wave_ws/src
 
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2 
 
     - name: Create ROS workspace and print directories
       run: |
         echo "Initial GitHub Workspace: ${{ github.workspace }}"
+        ls -la ${{ github.workspace }}
+        ls
 
         # Create the workspace structure
         mkdir -p ${{ github.workspace }}/../ros2_wave_ws/src/ros2-dev-challenge
