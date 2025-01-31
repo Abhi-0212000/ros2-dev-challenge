@@ -8,13 +8,15 @@ The node supports dynamic parameter updates and graceful shutdown handling.
 """
 
 from threading import Lock, Thread
+
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import numpy as np
 import rclpy
+from custom_interfaces.msg import SineWave
+from matplotlib.animation import FuncAnimation
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-from custom_interfaces.msg import SineWave
+
 from ros2_wave_pkg.sine_wave_sub_params import sine_wave_subscriber
 
 
@@ -89,8 +91,8 @@ class WaveSubscriber(Node):
 
                 # Keep buffer size in check by removing oldest data
                 if len(self.times) > self.params.buffer_size:
-                    self.times = self.times[-self.params.buffer_size:]
-                    self.values = self.values[-self.params.buffer_size:]
+                    self.times = self.times[-self.params.buffer_size :]
+                    self.values = self.values[-self.params.buffer_size :]
 
     def setup_plot(self):
         """Set up the matplotlib plot with animation."""

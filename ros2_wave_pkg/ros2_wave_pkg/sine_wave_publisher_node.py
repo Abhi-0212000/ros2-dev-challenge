@@ -6,20 +6,22 @@ This module implements a ROS2 node that generates and publishes sine wave data
 and provides a service for converting color images to grayscale.
 """
 
-import os
 import math
+import os
 import time
+
 import cv2
 import matplotlib.pyplot as plt
 import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy
+from ament_index_python.packages import get_package_share_directory
+from custom_interfaces.msg import SineWave
+from custom_interfaces.srv import ProcessImage
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-from ament_index_python.packages import get_package_share_directory
-from custom_interfaces.srv import ProcessImage
-from custom_interfaces.msg import SineWave
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Header
+
 from ros2_wave_pkg.sine_wave_pub_params import sine_wave_publisher
 
 
@@ -188,7 +190,9 @@ class SineWavePublisher(Node):
                 raise ValueError("Image path cannot be empty")
 
             # Read image
-            img = cv2.imread(request.image_path)      # pylint: disable=c-extension-no-member
+            img = cv2.imread(
+                request.image_path
+            )  # pylint: disable=c-extension-no-member
             if img is None:
                 raise FileNotFoundError(f"Could not read image at {request.image_path}")
 

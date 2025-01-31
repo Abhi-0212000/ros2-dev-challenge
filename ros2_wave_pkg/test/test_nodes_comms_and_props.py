@@ -8,15 +8,17 @@ between the sine wave publisher and subscriber nodes.
 
 import os
 import unittest
+
+import launch_testing
+import numpy as np
 import pytest
 import rclpy
-import launch_testing
-from launch import LaunchDescription
+from ament_index_python.packages import get_package_share_directory
+from custom_interfaces.msg import SineWave
 from launch_ros.actions import Node
 from launch_testing.actions import ReadyToTest
-import numpy as np
-from custom_interfaces.msg import SineWave
-from ament_index_python.packages import get_package_share_directory
+
+from launch import LaunchDescription
 
 
 @pytest.mark.launch_test
@@ -190,7 +192,9 @@ class TestNodeCommunication(unittest.TestCase):
         # Added detailed message logging
         self.test_node.get_logger().info("\nReceived message details:")
         for i, (time, value) in enumerate(zip(times, values)):
-            self.test_node.get_logger().info(f"Message {i}: time={time:.3f}s, value={value:.3f}")
+            self.test_node.get_logger().info(
+                f"Message {i}: time={time:.3f}s, value={value:.3f}"
+            )
 
         # Added sign change debugging
         sign_changes = np.where(np.diff(np.signbit(values)))[0]
@@ -233,4 +237,6 @@ class TestOutcome(unittest.TestCase):
 
         """
         # Allow exit code 0 (normal) and 1 (error) during testing
-        launch_testing.asserts.assertExitCodes(proc_info, allowable_exit_codes=[0, 1, -9])
+        launch_testing.asserts.assertExitCodes(
+            proc_info, allowable_exit_codes=[0, 1, -9]
+        )

@@ -9,8 +9,9 @@ for both publisher and subscriber nodes.
 
 import os
 from glob import glob
-from setuptools import setup
+
 from generate_parameter_library_py.setup_helper import generate_parameter_module
+from setuptools import setup
 
 package_name = "ros2_wave_pkg"
 
@@ -48,15 +49,17 @@ setup(
     maintainer_email="abhishek.nannuri@outlook.com",
     description="ROS2 package for sine wave publishing and visualization",
     license="Apache License 2.0",
-    tests_require=["pytest",
-                   "pytest-launch-testing",
-                   "launch_testing",
-                   "pytest-mock",
-                   "pytest-cov",
-                   "ros2_wave_pkg",
-                   "flake8",
-                   "black",
-                   "isort"],
+    tests_require=[
+        "pytest",
+        "pytest-launch-testing",
+        "launch_testing",
+        "pytest-mock",
+        "pytest-cov",
+        "ros2_wave_pkg",
+        "flake8",
+        "black",
+        "isort",
+    ],
     entry_points={
         "console_scripts": [
             "sine_wave_publisher = ros2_wave_pkg.sine_wave_publisher_node:main",
