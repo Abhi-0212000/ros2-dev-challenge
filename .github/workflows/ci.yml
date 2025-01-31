@@ -83,6 +83,9 @@ jobs:
         dpkg -l | grep isort
         dpkg -l | grep black
         cd ~/ros_ws/src/ros2-dev-challenge
-        flake8 ros2_wave_pkg
-        black --check ros2_wave_pkg
-        isort --check-only ros2_wave_pkg
+        echo "Running flake8..."
+        flake8 ros2_wave_pkg --statistics --count --show-source
+        echo "Running black..."
+        black --check --diff ros2_wave_pkg
+        echo "Running isort..."
+        isort --check-only --diff ros2_wave_pkg
