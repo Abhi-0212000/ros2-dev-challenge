@@ -34,6 +34,10 @@ jobs:
         cd ~/ros_ws/src
         git clone https://github.com/picknikrobotics/generate_parameter_library.git
 
+    - name: List workspace contents
+      run: |
+        ls -R ~/ros_ws/src
+
     - name: Install dependencies
       shell: bash
       run: |
