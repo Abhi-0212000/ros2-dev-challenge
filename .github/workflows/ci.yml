@@ -23,6 +23,7 @@ jobs:
         source install/setup.bash
 
     - name: List workspace directory
+      shell: bash
       run: ls -R ${{ github.workspace }}
 
     - name: Checkout repository
@@ -31,9 +32,11 @@ jobs:
         path: ${{ github.workspace }}/ros_ws/src/ros2-dev-challenge
     
     - name: List workspace directory
+      shell: bash
       run: ls -R ${{ github.workspace }}
 
-    - name: List git contents
+    - name: List git 
+      shell: bash
       run: |
         ls -R ${{ github.workspace }}/ros_ws/src/ros2-dev-challenge
 
