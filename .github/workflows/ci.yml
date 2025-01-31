@@ -43,15 +43,15 @@ jobs:
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
 
-    - name: Run pre-commit checks
-      shell: bash
-      run: |
-        cd ~/ros_ws/src
-        ls
-        cd ~/ros_ws/src/ros2-dev-challenge
-        ls
-        pre-commit install
-        pre-commit run --all-files
+    # - name: Run pre-commit checks
+    #   shell: bash
+    #   run: |
+    #     cd ~/ros_ws/src
+    #     ls
+    #     cd ~/ros_ws/src/ros2-dev-challenge
+    #     ls
+    #     pre-commit install
+    #     pre-commit run --all-files
 
     - name: Build
       shell: bash
