@@ -16,17 +16,23 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Create ROS workspace
+    - name: Create ROS workspace and print directories
       run: |
+        echo "Initial GitHub Workspace: ${{ github.workspace }}"
+        echo "Contents before moving:"
+        ls -la ${{ github.workspace }}
+        
         mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
-        # Move our checked out code to the right place
+    
+        echo "Moving files to src..."
         mv ${{ github.workspace }}/* ${{ github.workspace }}/ros2_wave_ws/src/ || true
-        # Move .github folder
-        mv ${{ github.workspace }}/.github ${{ github.workspace }}/ros2_wave_ws/src/ || true
-        # Move .pre-commit-config.yaml
-        mv ${{ github.workspace }}/.pre-commit-config.yaml ${{ github.workspace }}/ros2_wave_ws/src/ || true
-        # Move .pylintrc
-        mv ${{ github.workspace }}/.pylintrc ${{ github.workspace }}/ros2_wave_ws/src/ || true
+        mv ${{ github.workspace }}/.* ${{ github.workspace }}/ros2_wave_ws/src/ 2>/dev/null || true
+    
+        echo "Contents of ros2_wave_ws:"
+        ls -la ${{ github.workspace }}/ros2_wave_ws
+        echo "Contents of ros2_wave_ws/src:"
+        ls -la ${{ github.workspace }}/ros2_wave_ws/src
+    
 
     # Checkout generate_parameter_library
     - name: Clone generate_parameter_library
