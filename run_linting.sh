@@ -33,12 +33,18 @@ flake8 ros2_wave_pkg --show-source --statistics > "${LOG_DIR}/flake8.log" 2>&1 |
     exit 1
 }
 
+echo "black version:"
+black --version
+
 echo "Running black..."
 black --check --diff ros2_wave_pkg > "${LOG_DIR}/black.log" 2>&1 || {
     echo "Black found formatting issues:"
     cat "${LOG_DIR}/black.log"
     exit 1
 }
+
+echo "isort version:"
+isort --version
 
 echo "Running isort..."
 isort --check-only --diff ros2_wave_pkg > "${LOG_DIR}/isort.log" 2>&1 || {
