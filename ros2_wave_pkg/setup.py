@@ -53,7 +53,10 @@ setup(
                    "launch_testing",
                    "pytest-mock",
                    "pytest-cov",
-                   "ros2_wave_pkg"],
+                   "ros2_wave_pkg",
+                   "flake8",
+                   "black",
+                   "isort"],
     entry_points={
         "console_scripts": [
             "sine_wave_publisher = ros2_wave_pkg.sine_wave_publisher_node:main",
