@@ -19,12 +19,13 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Only install numpy from pip to match your version
-RUN pip3 install numpy==1.24.0
 
 # Create workspace structure
 RUN mkdir -p /ros2_ws/src
 WORKDIR /ros2_ws/src
+
+# Clone generate_parameter_library first
+RUN git clone https://github.com/picknikrobotics/generate_parameter_library.git
 
 # Clone your repository with specific branch
 RUN git clone -b develop https://github.com/Abhi-0212000/ros2-dev-challenge.git
@@ -41,15 +42,18 @@ RUN apt-get update && \
 
 # Build the packages
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
-    # Build custom_interfaces first
+    # First build generate_parameter_library
+    colcon build --packages-select generate_parameter_library generate_parameter_library_py parameter_traits && \
+    . install/setup.sh && \
+    # Then build custom_interfaces
     colcon build --packages-select custom_interfaces && \
-    # Source the newly built package
     . install/setup.sh && \
     # Then build ros2_wave_pkg
     colcon build --packages-select ros2_wave_pkg
 
-# Source the workspace in .bashrc
-RUN echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc
+# Add convenient aliases for sourcing
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc && \
+    echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc
 
 # # Create entrypoint script directly in the container
 # RUN echo '#!/bin/bash\n\
