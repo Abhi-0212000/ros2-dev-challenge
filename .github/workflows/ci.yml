@@ -80,6 +80,7 @@ jobs:
     - name: Run linting
       shell: bash
       run: |
+        dpkg -l | grep flake8
         cd ~/ros_ws/src/ros2-dev-challenge
         flake8 ros2_wave_pkg
         black --check ros2_wave_pkg
