@@ -13,6 +13,11 @@ jobs:
       image: ros:humble
 
     steps:
+    - name: create ros2 workspace and src
+      run: |
+        mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
+        cd ${{ github.workspace }}/ros2_wave_ws/src
+
     - name: Checkout repository
       uses: actions/checkout@v2
 
