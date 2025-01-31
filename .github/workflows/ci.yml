@@ -13,23 +13,29 @@ jobs:
       image: ros:humble
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
     - name: Create ROS workspace
       run: |
-        mkdir -p /ros2_wave_ws/src
+        mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
+        # Move our checked out code to the right place
+        mv ${{ github.workspace }}/* ${{ github.workspace }}/ros2_wave_ws/src/ || true
+        # Move .github folder
+        mv ${{ github.workspace }}/.github ${{ github.workspace }}/ros2_wave_ws/src/ || true
+        # Move .pre-commit-config.yaml
+        mv ${{ github.workspace }}/.pre-commit-config.yaml ${{ github.workspace }}/ros2_wave_ws/src/ || true
+        # Move .pylintrc
+        mv ${{ github.workspace }}/.pylintrc ${{ github.workspace }}/ros2_wave_ws/src/ || true
 
     # Checkout generate_parameter_library
     - name: Clone generate_parameter_library
+      working-directory: ${{ github.workspace }}/ros2_wave_ws/src
       run: |
-        cd /ros2_wave_ws/src
         git clone https://github.com/picknikrobotics/generate_parameter_library.git
 
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        path: /ros2_wave_ws/src/ros2-dev-challenge
-
     - name: Install dependencies
-      working-directory: /ros2_wave_ws
+      working-directory: ${{ github.workspace }}/ros2_wave_ws
       run: |
         apt-get update
         apt-get install -y python3-pip
@@ -38,13 +44,13 @@ jobs:
         rosdep install --from-paths src --ignore-src -r -y
 
     - name: Run pre-commit checks
-      working-directory: /ros2_wave_ws/src/ros2-dev-challenge
+      working-directory: ${{ github.workspace }}/ros2_wave_ws/src/ros2-dev-challenge
       run: |
         pre-commit install
         pre-commit run --all-files
 
     - name: Build
-      working-directory: /ros2_wave_ws
+      working-directory: ${{ github.workspace }}/ros2_wave_ws
       run: |
         . /opt/ros/humble/setup.bash
         colcon build
@@ -54,7 +60,7 @@ jobs:
       run: |
         . /opt/ros/humble/setup.bash
         . install/setup.bash
-        colcon test
+        colcon test --packages-select ros2_wave_pkg
         colcon test-result --verbose
 
     - name: Run linting
