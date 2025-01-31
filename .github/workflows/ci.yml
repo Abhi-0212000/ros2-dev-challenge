@@ -13,32 +13,18 @@ jobs:
       image: ros:humble
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
     - name: Setup Workspace
       shell: bash
       run: |
         source /opt/ros/humble/setup.bash
         mkdir -p ~/ros_ws/src/ros2-dev-challenge
+        cp -r $GITHUB_WORKSPACE ~/ros_ws/src/ros2-dev-challenge
         cd ~/ros_ws
         colcon build
         source install/setup.bash
-
-    - name: List workspace directory
-      shell: bash
-      run: ls -R ${{ github.workspace }}
-
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        path: ${{ github.workspace }}/ros_ws/src/ros2-dev-challenge
-    
-    - name: List workspace directory
-      shell: bash
-      run: ls -R ${{ github.workspace }}
-
-    - name: List git 
-      shell: bash
-      run: |
-        ls -R ${{ github.workspace }}/ros_ws/src/ros2-dev-challenge
 
     # Checkout generate_parameter_library
     - name: Clone generate_parameter_library
