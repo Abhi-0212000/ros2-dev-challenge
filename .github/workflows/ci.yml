@@ -74,7 +74,7 @@ jobs:
         cd ~/ros_ws
         . /opt/ros/humble/setup.bash
         . install/setup.bash
-        colcon test --packages-select ros2_wave_pkg
+        colcon test --packages-select ros2_wave_pkg --event-handlers console_direct+
         colcon test-result --verbose
 
     - name: Run linting
