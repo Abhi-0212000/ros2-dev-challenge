@@ -22,7 +22,7 @@ jobs:
         
         if [ -d "${{ github.workspace }}" ]; then
           echo "Contents before moving:"
-          ls -la ${{ github.workspace }}
+          ls
         else
           echo "Error: Directory not found at ${{ github.workspace }}"
         fi
