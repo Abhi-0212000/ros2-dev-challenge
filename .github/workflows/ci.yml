@@ -14,6 +14,7 @@ jobs:
 
     steps:
     - name: Setup Workspace
+      shell: bash
       run: |
         mkdir -p ~/ros_ws/src/
         cd ~/ros_ws
@@ -27,11 +28,13 @@ jobs:
 
     # Checkout generate_parameter_library
     - name: Clone generate_parameter_library
+      shell: bash
       run: |
         cd ~/ros_ws/src
         git clone https://github.com/picknikrobotics/generate_parameter_library.git
 
     - name: Install dependencies
+      shell: bash
       run: |
         cd ~/ros_ws
         apt-get update
@@ -41,18 +44,21 @@ jobs:
         rosdep install --from-paths src --ignore-src -r -y
 
     - name: Run pre-commit checks
+      shell: bash
       run: |
         cd ~/ros_ws
         pre-commit install
         pre-commit run --all-files
 
     - name: Build
+      shell: bash
       run: |
         cd ~/ros_ws
         . /opt/ros/humble/setup.bash
         colcon build
         
     - name: Run tests
+      shell: bash
       run: |
         cd ~/ros_ws
         . /opt/ros/humble/setup.bash
@@ -61,6 +67,7 @@ jobs:
         colcon test-result --verbose
 
     - name: Run linting
+      shell: bash
       run: |
         cd ~/ros_ws
         flake8 src/ros2_wave_pkg
