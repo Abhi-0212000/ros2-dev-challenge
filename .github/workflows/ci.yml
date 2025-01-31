@@ -46,7 +46,7 @@ jobs:
       run: |
         cd ~/ros_ws
         apt-get update
-        apt-get install -y python3-pip
+        apt-get install -y flake8 python3-pip
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
 
@@ -80,6 +80,8 @@ jobs:
       shell: bash
       run: |
         dpkg -l | grep flake8
+        dpkg -l | grep isort
+        dpkg -l | grep black
         cd ~/ros_ws/src/ros2-dev-challenge
         flake8 ros2_wave_pkg
         black --check ros2_wave_pkg
