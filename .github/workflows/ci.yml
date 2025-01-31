@@ -19,19 +19,26 @@ jobs:
     - name: Create ROS workspace and print directories
       run: |
         echo "Initial GitHub Workspace: ${{ github.workspace }}"
-        echo "Contents before moving:"
-        ls -la ${{ github.workspace }}
         
+        if [ -d "${{ github.workspace }}" ]; then
+          echo "Contents before moving:"
+          ls -la ${{ github.workspace }}
+        else
+          echo "Error: Directory not found at ${{ github.workspace }}"
+        fi
+    
+        # Ensure workspace directory creation
         mkdir -p ${{ github.workspace }}/ros2_wave_ws/src
     
-        echo "Moving files to src..."
+        echo "Moving files to src if any..."
         mv ${{ github.workspace }}/* ${{ github.workspace }}/ros2_wave_ws/src/ || true
         mv ${{ github.workspace }}/.* ${{ github.workspace }}/ros2_wave_ws/src/ 2>/dev/null || true
     
         echo "Contents of ros2_wave_ws:"
-        ls -la ${{ github.workspace }}/ros2_wave_ws
+        ls -la ${{ github.workspace }}/ros2_wave_ws || true
         echo "Contents of ros2_wave_ws/src:"
-        ls -la ${{ github.workspace }}/ros2_wave_ws/src
+        ls -la ${{ github.workspace }}/ros2_wave_ws/src || true
+    
     
 
     # Checkout generate_parameter_library
