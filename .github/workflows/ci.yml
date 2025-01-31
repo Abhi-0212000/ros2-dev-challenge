@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ros:humble
-    env:
-      PYTHONUNBUFFERED: 1
 
     steps:
     - name: Checkout repository
@@ -77,6 +75,20 @@ jobs:
         . install/setup.bash
         colcon test --packages-select ros2_wave_pkg --event-handlers console_direct+
         colcon test-result --verbose
+
+    - name: Run linting
+      shell: bash
+      run: |
+        cd ~/ros_ws/src/ros2-dev-challenge
+        chmod +x run_linting.sh
+        ./run_linting.sh
+
+    - name: Upload lint logs
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: lint-logs
+        path: ~/ros_ws/src/ros2-dev-challenge/lint_logs/
 
     - name: Run linting with debug
       shell: bash
