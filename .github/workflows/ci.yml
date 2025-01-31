@@ -22,10 +22,16 @@ jobs:
         colcon build
         source install/setup.bash
 
+    - name: List workspace directory
+      run: ls -R ${{ github.workspace }}
+
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
         path: ${{ github.workspace }}/ros_ws/src/ros2-dev-challenge
+    
+    - name: List workspace directory
+      run: ls -R ${{ github.workspace }}
 
     - name: List git contents
       run: |
