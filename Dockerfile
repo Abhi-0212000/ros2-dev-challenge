@@ -5,20 +5,10 @@ FROM ros:humble
 ENV ROS_DISTRO=humble
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies with specific versions
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-opencv=4.5.4+dfsg-9ubuntu4 \
-    python3-matplotlib=3.5.1-2build1 \
-    python3-numpy=1:1.21.5-1ubuntu22.04.1 \
-    ros-humble-rclpy=3.3.15-1jammy.20241128.012616 \
-    ros-humble-std-msgs=4.2.4-1jammy.20241128.004339 \
-    ros-humble-sensor-msgs=4.2.4-1jammy.20241128.010813 \
-    ros-humble-sensor-msgs-py=4.2.4-1jammy.20241128.024210 \
-    ros-humble-cv-bridge \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
+# Install git (needed for cloning repositories)
+RUN apt-get update && \
+    apt-get install -y git python3-pip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create workspace structure
 RUN mkdir -p /ros2_ws/src
@@ -42,31 +32,18 @@ RUN apt-get update && \
 
 # Build the packages
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
-    # First build generate_parameter_library
+    # First build generate_parameter_library pkgs that we need
     colcon build --packages-select generate_parameter_library generate_parameter_library_py parameter_traits && \
     . install/setup.sh && \
-    # Then build custom_interfaces
-    colcon build --packages-select custom_interfaces && \
-    . install/setup.sh && \
-    # Then build ros2_wave_pkg
-    colcon build --packages-select ros2_wave_pkg
+    # Then build custom_interfaces, ros2_wave_pkg
+    colcon build --packages-select custom_interfaces ros2_wave_pkg && \
+    . install/setup.sh
 
 # Add convenient aliases for sourcing
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc && \
     echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc
 
-# # Create entrypoint script directly in the container
-# RUN echo '#!/bin/bash\n\
-# set -e\n\
-# \n\
-# # Source ROS 2 setup\n\
-# source "/opt/ros/$ROS_DISTRO/setup.bash"\n\
-# source "/ros2_ws/install/setup.bash"\n\
-# \n\
-# exec "$@"' > /ros_entrypoint.sh && \
-#     chmod +x /ros_entrypoint.sh
-
-# Create an entrypoint script
+# copy and execute entrypoint script
 COPY ros_entrypoint.sh /
 RUN chmod +x /ros_entrypoint.sh
 

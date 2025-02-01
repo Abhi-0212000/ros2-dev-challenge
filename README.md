@@ -4,14 +4,17 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
-  - [Prerequisites](#prerequisites)
-  - [Standard Installation](#standard-installation)
-  - [Docker Installation](#docker-installation)
+   - [Prerequisites](#prerequisites)
+   - [Standard Installation](#standard-installation)
+   - [Docker Installation](#docker-installation)
+      - [Windows with GUI (Tested and Recommended)](#windows-with-gui-tested-and-recommended)
+      - [Ubuntu with GUI](#ubuntu-with-gui)
 - [Usage](#usage)
-  - [Running the Nodes](#running-the-nodes)
-  - [Parameter Configuration](#parameter-configuration)
-  - [Visualization Control](#visualization-control)
-  - [Image Processing Service](#image-processing-service)
+   - [Running the Nodes](#running-the-nodes)
+   - [Parameter Configuration](#parameter-configuration)
+   - [Visualization Control](#visualization-control)
+   - [System Performance Comparison](#system-performance-comparison)
+   - [Image Processing Service](#image-processing-service)
 - [Development](#development)
 - [Docker Reference](#docker-commands-reference)
 - [License](#license)
@@ -107,6 +110,8 @@ A ROS2 package implementing a sine wave publisher/subscriber system with image p
    - Install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
    - Follow this detailed [X11 forwarding and server setup guide](https://youtu.be/FlHVuA_98SA?t=151)
 
+   **NOTE**: Make sure Docker Desktop (Needed to execute Docker cmds) and Xming Server (Needed to visualize when you have launched nodes) is running.
+
 2. **Build and run**:
    ```powershell
    # Create directory and get files
@@ -127,6 +132,8 @@ A ROS2 package implementing a sine wave publisher/subscriber system with image p
    # Basic run without visualization
    docker run -it ros2_wave_pkg
    ```
+
+3. **Follow [Node Usage Guide](#usage)**
 
 #### Ubuntu with GUI
 
@@ -171,6 +178,8 @@ docker run -it \
     --privileged \
     ros2_wave_pkg
 ```
+
+3. **Follow [Node Usage Guide](#usage)**
 
 ## Usage
 
