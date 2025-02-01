@@ -174,7 +174,9 @@ class WaveSubscriber(Node):
             self.fig, self.ax = plt.subplots(figsize=(10, 6))
 
             # Initialize empty scatter plot
-            self.scatter = self.ax.scatter([], [], c='blue', label='Sine Wave', alpha=0.6, s=50)  # Size of points
+            self.scatter = self.ax.scatter(
+                [], [], c="blue", label="Sine Wave", alpha=0.6, s=50
+            )  # Size of points
 
             self.ax.set_xlabel("Time (s)")
             self.ax.set_ylabel("Amplitude")
@@ -191,7 +193,9 @@ class WaveSubscriber(Node):
                 self.ax.set_ylim(-y_limit, y_limit)
 
             # Create animation
-            self.anim = FuncAnimation(self.fig, self.update_plot, interval=50, blit=False)  # 20 FPS
+            self.anim = FuncAnimation(
+                self.fig, self.update_plot, interval=50, blit=False
+            )  # 20 FPS
 
             # Handle window close event
             self.fig.canvas.mpl_connect("close_event", self.on_plot_close)
