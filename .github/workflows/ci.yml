@@ -79,6 +79,7 @@ jobs:
     - name: Run linting
       shell: bash
       run: |
+        pip3 install -r requirements-dev.txt
         cd ~/ros_ws/src/ros2-dev-challenge
         chmod +x run_linting.sh
         ./run_linting.sh
