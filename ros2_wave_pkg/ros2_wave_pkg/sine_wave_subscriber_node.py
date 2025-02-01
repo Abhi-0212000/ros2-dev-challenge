@@ -166,19 +166,15 @@ class WaveSubscriber(Node):
 
     #     # Return all artists that need to be redrawn
     #     return [self.line, self.ax.xaxis, self.ax.yaxis]
-    
+
     def setup_plot(self):
         """Set up the matplotlib plot with animation."""
         try:
             plt.style.use("seaborn-darkgrid")
             self.fig, self.ax = plt.subplots(figsize=(10, 6))
-            
+
             # Initialize empty scatter plot
-            self.scatter = self.ax.scatter([], [], 
-                                        c='blue',
-                                        label='Sine Wave',
-                                        alpha=0.6,
-                                        s=50)  # Size of points
+            self.scatter = self.ax.scatter([], [], c='blue', label='Sine Wave', alpha=0.6, s=50)  # Size of points
 
             self.ax.set_xlabel("Time (s)")
             self.ax.set_ylabel("Amplitude")
@@ -188,19 +184,14 @@ class WaveSubscriber(Node):
 
             # Set initial view limits
             self.ax.set_xlim(0, 10)
-            
+
             # Y-axis limits will be set in update_plot when we receive data
             if self.max_amplitude is not None:
                 y_limit = self.max_amplitude * 1.2
                 self.ax.set_ylim(-y_limit, y_limit)
 
             # Create animation
-            self.anim = FuncAnimation(
-                self.fig, 
-                self.update_plot, 
-                interval=50,  # 20 FPS
-                blit=False
-            )
+            self.anim = FuncAnimation(self.fig, self.update_plot, interval=50, blit=False)  # 20 FPS
 
             # Handle window close event
             self.fig.canvas.mpl_connect("close_event", self.on_plot_close)
