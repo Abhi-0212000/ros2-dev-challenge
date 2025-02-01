@@ -99,17 +99,21 @@ class WaveSubscriber(Node):
         try:
             plt.style.use("seaborn-darkgrid")
             self.fig, self.ax = plt.subplots(figsize=(10, 6))
-            (self.line,) = self.ax.plot([], [], "b-", label="Sine Wave", linewidth=2)
+
+            # Initialize empty scatter plot
+            self.scatter = self.ax.scatter(
+                [], [], c="blue", label="Sine Wave", alpha=0.6, s=50
+            )  # Size of points
 
             self.ax.set_xlabel("Time (s)")
             self.ax.set_ylabel("Amplitude")
-            self.ax.set_title("Sine Wave Visualization")
+            self.ax.set_title("Sine Wave Visualization (Scatter)")
             self.ax.grid(True, alpha=0.3)
             self.ax.legend()
 
             # Set initial view limits
             self.ax.set_xlim(0, 10)
-            # self.ax.set_ylim(-2, 2)
+
             # Y-axis limits will be set in update_plot when we receive data
             if self.max_amplitude is not None:
                 y_limit = self.max_amplitude * 1.2
@@ -117,8 +121,8 @@ class WaveSubscriber(Node):
 
             # Create animation
             self.anim = FuncAnimation(
-                self.fig, self.update_plot, interval=50, blit=False  # 20 FPS
-            )
+                self.fig, self.update_plot, interval=50, blit=False
+            )  # 20 FPS
 
             # Handle window close event
             self.fig.canvas.mpl_connect("close_event", self.on_plot_close)
@@ -139,16 +143,16 @@ class WaveSubscriber(Node):
 
         """
         if not self.plot_active:
-            return [self.line]
+            return [self.scatter]
 
         with self.data_lock:
             if len(self.times) < 2:
-                return [self.line, self.ax.xaxis, self.ax.yaxis]
+                return [self.scatter, self.ax.xaxis, self.ax.yaxis]
             times = self.times.copy()
             values = self.values.copy()
 
-        # Update the line data
-        self.line.set_data(times, values)
+        # Update the scatter plot data
+        self.scatter.set_offsets(np.c_[times, values])
 
         # Update x-axis - show last 10 seconds window
         current_time = times[-1]
@@ -165,7 +169,7 @@ class WaveSubscriber(Node):
             self.ax.set_ylim(-y_limit, y_limit)
 
         # Return all artists that need to be redrawn
-        return [self.line, self.ax.xaxis, self.ax.yaxis]
+        return [self.scatter, self.ax.xaxis, self.ax.yaxis]
 
     def on_plot_close(self, event):
         """
