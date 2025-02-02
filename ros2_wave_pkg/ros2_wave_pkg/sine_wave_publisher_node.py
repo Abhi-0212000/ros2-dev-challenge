@@ -8,20 +8,19 @@ and provides a service for converting color images to grayscale.
 
 import math
 import os
-import time
 
 import cv2
 import matplotlib.pyplot as plt
 import rclpy
 from ament_index_python.packages import get_package_share_directory
-from custom_interfaces.msg import SineWave
-from custom_interfaces.srv import ProcessImage
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Header
 
+from custom_interfaces.msg import SineWave
+from custom_interfaces.srv import ProcessImage
 from ros2_wave_pkg.sine_wave_pub_params import sine_wave_publisher
 
 
@@ -61,13 +60,6 @@ class SineWavePublisher(Node):
         )
         self.publisher = self.create_publisher(SineWave, "sine_wave", qos_profile)
 
-        # Wait for subscriber before starting
-        while self.count_subscribers("sine_wave") == 0:
-            self.get_logger().info("Waiting for subscribers...")
-            time.sleep(0.1)
-
-        self.get_logger().info("Subscriber found, starting publication...")
-
         # Initialize time tracking
         self.start_time = None
 
@@ -79,7 +71,7 @@ class SineWavePublisher(Node):
 
         # Log parameters and initialization
         self._log_parameters()
-        self.get_logger().info("Publisher and image processing service initialized")
+        self.get_logger().info("Publisher and image processing service initialized.")
 
     def param_listener_callback(self):
         """
@@ -276,20 +268,22 @@ class SineWavePublisher(Node):
             self.get_logger().info("Starting cleanup sequence...")
 
             # Cancel timer
-            if hasattr(self, "timer"):
+            if hasattr(self, "publisher_timer"):
                 self.publisher_timer.cancel()
+
+            if hasattr(self, "param_listener_timer"):
                 self.param_listener_timer.cancel()
 
             # Cleanup publisher and service
             if hasattr(self, "publisher"):
                 self.destroy_publisher(self.publisher)
+
             if hasattr(self, "srv"):
                 self.destroy_service(self.srv)
 
-            self.get_logger().info("Cleanup completed successfully")
-
         except Exception as e:
-            self.get_logger().error(f"Error during cleanup: {str(e)}")
+            # self.get_logger().error(f"Error during cleanup: {str(e)}")
+            print(f"Error during cleanup: {str(e)}")
 
 
 def main(args=None):
@@ -312,15 +306,28 @@ def main(args=None):
         try:
             executor.spin()
         except KeyboardInterrupt:
-            pass
+            # First cancel the timers in the node
+            if node is not None:
+                node.cleanup()
+                print("Node cleanup completed successfully")
+            # Then shutdown the executor
+            if executor is not None:
+                executor.shutdown()
+                print("Executor shutdown completed successfully")
 
     except Exception as e:
         print(f"Error in main: {str(e)}")
     finally:
+        # Cleanup in reverse order of creation
+        if executor is not None:
+            executor.shutdown()
+            print("Executor shutdown completed in finally block")
         if node is not None:
-            node.cleanup()
             node.destroy_node()
-        rclpy.shutdown()
+            print("Node destroyed in finally block")
+        if rclpy.ok():
+            rclpy.shutdown()
+            print("ROS2 shutdown completed in finally block")
 
 
 if __name__ == "__main__":

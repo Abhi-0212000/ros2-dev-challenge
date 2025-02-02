@@ -14,11 +14,11 @@ import numpy as np
 import pytest
 import rclpy
 from ament_index_python.packages import get_package_share_directory
-from custom_interfaces.msg import SineWave
+from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch_testing.actions import ReadyToTest
 
-from launch import LaunchDescription
+from custom_interfaces.msg import SineWave
 
 
 @pytest.mark.launch_test

@@ -7,16 +7,17 @@ processes the data, and provides real-time visualization using matplotlib.
 The node supports dynamic parameter updates and graceful shutdown handling.
 """
 
-from threading import Lock, Thread
+from functools import partial
+from threading import Event, Lock, Thread, current_thread
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rclpy
-from custom_interfaces.msg import SineWave
 from matplotlib.animation import FuncAnimation
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 
+from custom_interfaces.msg import SineWave
 from ros2_wave_pkg.sine_wave_sub_params import sine_wave_subscriber
 
 
@@ -31,7 +32,6 @@ class WaveSubscriber(Node):
 
         # Add shutdown event flag
         self._cleanup_done = False
-        self._shutdown_event = False
         self.plot_thread = None
 
         # Initialize data storage with thread safety
@@ -48,23 +48,22 @@ class WaveSubscriber(Node):
 
         # Start visualization if enabled
         if self.params.enable_plot:
-            self.plot_thread = Thread(target=self.setup_plot)
-            self.plot_thread.daemon = (
-                True  # Make thread daemon so it doesn't block shutdown
-            )
-            self.plot_thread.start()
-            self.plot_active = True
-            self.get_logger().info("Visualization enabled, starting plot thread")
-        else:
-            self.get_logger().info(
-                "Visualization disabled, running in logging-only mode"
-            )
+            self.start_plot_thread()
 
         # Create subscription with reliable QoS
         qos_profile = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, depth=10)
         self.subscription = self.create_subscription(
             SineWave, "sine_wave", self.listener_callback, qos_profile
         )
+
+    def start_plot_thread(self):
+        """Start the plot thread."""
+        self.event = Event()
+        self.plot_thread = Thread(target=self.setup_plot, args=(self.event,))
+        self.plot_thread.daemon = True  # Allow clean shutdown
+        self.plot_thread.start()
+        self.plot_active = True
+        self.get_logger().info("Visualization enabled, starting plot thread")
 
     def listener_callback(self, msg):
         """Process incoming sine wave messages."""
@@ -94,7 +93,7 @@ class WaveSubscriber(Node):
                     self.times = self.times[-self.params.buffer_size :]
                     self.values = self.values[-self.params.buffer_size :]
 
-    def setup_plot(self):
+    def setup_plot(self, event):
         """Set up the matplotlib plot with animation."""
         try:
             plt.style.use("seaborn-darkgrid")
@@ -102,7 +101,7 @@ class WaveSubscriber(Node):
 
             # Initialize empty scatter plot
             self.scatter = self.ax.scatter(
-                [], [], c="blue", label="Sine Wave", alpha=0.6, s=50
+                [], [], c="blue", label="Sine Wave", alpha=0.6, s=20
             )  # Size of points
 
             self.ax.set_xlabel("Time (s)")
@@ -113,15 +112,18 @@ class WaveSubscriber(Node):
 
             # Set initial view limits
             self.ax.set_xlim(0, 10)
+            self.ax.set_ylim(-5, 5)
 
             # Y-axis limits will be set in update_plot when we receive data
             if self.max_amplitude is not None:
                 y_limit = self.max_amplitude * 1.2
                 self.ax.set_ylim(-y_limit, y_limit)
 
+            print(current_thread().name)
+
             # Create animation
             self.anim = FuncAnimation(
-                self.fig, self.update_plot, interval=50, blit=False
+                self.fig, partial(self.update_plot, event), interval=50, blit=False
             )  # 20 FPS
 
             # Handle window close event
@@ -133,17 +135,25 @@ class WaveSubscriber(Node):
             self.get_logger().error(f"Error in plot setup: {str(e)}")
             self.plot_active = False
 
-    def update_plot(self, frame):
+    def update_plot(self, frame, event):
         """
         Update function for matplotlib animation.
 
         Args:
         ----
             frame: Frame number (required by FuncAnimation but unused)
+            event: Event flag to stop the animation
 
         """
-        if not self.plot_active:
-            return [self.scatter]
+        if self.event.is_set():
+            self.anim.event_source.stop()
+
+            plt.close(self.fig)
+            self.plot_active = False
+            print("plot window closed and plot_active set to False")
+            return
+        # if not self.plot_active:
+        #     return [self.scatter]
 
         with self.data_lock:
             if len(self.times) < 2:
@@ -192,38 +202,12 @@ class WaveSubscriber(Node):
         try:
             self.get_logger().info("Starting cleanup sequence...")
 
-            # First, mark for shutdown and stop plotting
-            self._shutdown_event = True
-            self.plot_active = False
-
-            if self.params.enable_plot:
-                # Stop animation if it exists
-                if hasattr(self, "anim") and self.anim is not None:
-                    self.get_logger().info("Stopping animation...")
-                    try:
-                        self.anim.event_source.stop()
-                    except Exception as e:
-                        self.get_logger().error(f"Error stopping animation: {str(e)}")
-                    self.anim = None
-
-                # Close plot windows
-                plt.close("all")
-
-                # Wait for plotting thread
-                if self.plot_thread is not None:
-                    if self.plot_thread.is_alive():
-                        self.get_logger().info(
-                            "Waiting for plot thread to terminate..."
-                        )
-                        self.plot_thread.join(timeout=1.0)
-                        if self.plot_thread.is_alive():
-                            self.get_logger().warn(
-                                "Plot thread still alive after timeout"
-                            )
-                    else:
-                        self.get_logger().info("Plot thread already terminated")
-
-                self.get_logger().info("Visualization cleanup completed")
+            if self.plot_active:
+                self.get_logger().info("Stopping visualization...")
+                self.event.set()
+                self.get_logger().info("Visualization stopped")
+                self.plot_thread.join()
+                print("Plotting thread gracefully stopped.")
 
             # Clean up ROS resources
             self.destroy_subscription(self.subscription)
@@ -250,48 +234,30 @@ def main(args=None):
         executor = rclpy.executors.MultiThreadedExecutor(num_threads=2)
         executor.add_node(node)
 
-        def signal_handler(sig, frame):
-            """
-            Handle shutdown signals.
-
-            Args:
-            ----
-                sig: Signal number (required by signal handler but unused)
-                frame: Current stack frame (required by signal handler but unused)
-
-            """
-            nonlocal node
-            if node is not None and not node._cleanup_done:
-                node.get_logger().info("Shutdown signal received")
-                try:
-                    # Stop executor first
-                    executor.shutdown()
-                    # Then cleanup node
-                    node.cleanup()
-                    node.destroy_node()
-                    # Finally shutdown rclpy
-                    if rclpy.ok():
-                        rclpy.shutdown()
-                except Exception as e:
-                    print(f"Error during shutdown: {e}")
-
-        # Setup signal handlers
-        import signal
-
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-
         try:
             executor.spin()
         except KeyboardInterrupt:
-            signal_handler(
-                signal.SIGINT, None
-            )  # Handle keyboard interrupt same as signals
+            if node is not None:
+                node.cleanup()
+                print("Node cleanup completed successfully")
+            # Then shutdown the executor
+            if executor is not None:
+                executor.shutdown()
+                print("Executor shutdown completed successfully")
 
     except Exception as e:
         print(f"Error in main: {str(e)}")
-        if node is not None and not node._cleanup_done:
-            node.cleanup()
+    finally:
+        # Cleanup in reverse order of creation
+        if executor is not None:
+            executor.shutdown()
+            print("Executor shutdown completed in finally block")
+        if node is not None:
+            node.destroy_node()
+            print("Node destroyed in finally block")
+        if rclpy.ok():
+            rclpy.shutdown()
+            print("ROS2 shutdown completed in finally block")
 
 
 if __name__ == "__main__":

@@ -58,7 +58,6 @@ setup(
         "ros2_wave_pkg",
         "flake8",
         "black",
-        "isort",
     ],
     entry_points={
         "console_scripts": [

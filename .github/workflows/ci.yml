@@ -46,7 +46,7 @@ jobs:
       run: |
         cd ~/ros_ws
         apt-get update
-        apt-get install -y flake8 python3-pip isort
+        apt-get install -y flake8 python3-pip
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
 
