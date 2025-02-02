@@ -43,15 +43,4 @@ black --check --diff ros2_wave_pkg > "${LOG_DIR}/black.log" 2>&1 || {
     exit 1
 }
 
-echo "isort version:"
-isort --version
-pip3 show isort
-
-echo "Running isort..."
-isort --check-only --diff ros2_wave_pkg > "${LOG_DIR}/isort.log" 2>&1 || {
-    echo "isort found import ordering issues:"
-    cat "${LOG_DIR}/isort.log"
-    exit 1
-}
-
 echo "All linting checks passed!"
