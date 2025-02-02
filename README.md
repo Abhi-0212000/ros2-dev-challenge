@@ -300,6 +300,20 @@ In both scenarios, the dynamic parameter update from amplitude 3.0 to 5.0 is cle
 
 The package provides a service to convert color images to grayscale with visualization options:
 
+Make sure you have followed below commands before making service call in new terminal.
+
+Open a new terminal:
+   ```bash
+   # Source ROS2 again (needed for new terminal)
+   source /opt/ros/humble/setup.bash
+   
+   # Go to workspace
+   cd ~/ros2_ws
+   
+   # Source the workspace again
+   source install/setup.bash
+   ```
+
 1. **Using custom image**:
    ```bash
    ros2 service call /process_image custom_interfaces/srv/ProcessImage "{
